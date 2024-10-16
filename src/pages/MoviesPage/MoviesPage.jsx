@@ -1,31 +1,25 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { fetchMovies } from '../../services/api';
 import MovieList from '../../components/MovieList/MovieList';
 import styles from './MoviesPage.module.css';
 
 const MoviesPage = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const [query, setQuery] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams();
     const [movies, setMovies] = useState([]);
-
-    // Get the query parameter from the URL
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const searchQuery = params.get('query') || '';
-        if (searchQuery) {
-            setQuery(searchQuery);
-            handleSearch(searchQuery);
-        }
-    }, [location.search]); // Run when the search query changes in the URL
+    const query = searchParams.get('query') || '';
 
     const handleSearch = async (searchQuery) => {
         const fetchedMovies = await fetchMovies(searchQuery);
         setMovies(fetchedMovies);
-        // Update the URL with the search query
-        navigate(`?query=${searchQuery}`);
+        setSearchParams({ query: searchQuery });
     };
+
+    useEffect(() => {
+        if (query) {
+            handleSearch(query);
+        }
+    }, [query]);
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -38,14 +32,14 @@ const MoviesPage = () => {
                 <input
                     type="text"
                     value={query}
-                    onChange={(e) => setQuery(e.target.value)}
+                    onChange={(e) => setSearchParams({ query: e.target.value })}
                     placeholder="Search for a movie"
                     className={styles.searchInput}
                 />
                 <button type="submit" className={styles.searchButton}>Search</button>
             </form>
 
-            {movies.length > 0 ? <MovieList movies={movies} /> : <p>No movies found</p>}
+            {movies.length > 0 ? <MovieList movies={movies} query={query} /> : <p>No movies found</p>}
         </div>
     );
 };

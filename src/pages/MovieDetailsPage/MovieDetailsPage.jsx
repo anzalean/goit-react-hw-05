@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useParams, Link, Routes, Route } from 'react-router-dom';
+import { useEffect, useState, useRef } from 'react';
+import { useParams, Link, Routes, Route, useLocation } from 'react-router-dom';
 import { fetchMovieDetails } from '../../services/api';
 import MovieCast from '../../components/MovieCast/MovieCast';
 import MovieReviews from '../../components/MovieReviews/MovieReviews';
@@ -10,7 +10,8 @@ const MovieDetailsPage = () => {
   const { movieId } = useParams();
   const [movie, setMovie] = useState(null);
   const navigate = useNavigate();
-
+  const location = useLocation();
+  const prevLocationRef = useRef(location.state?.from ?? '/movies'); 
 
   useEffect(() => {
     fetchMovieDetails(movieId).then(setMovie);
@@ -18,9 +19,13 @@ const MovieDetailsPage = () => {
 
   if (!movie) return <div>Loading...</div>;
 
+  const handleGoBack = () => {
+    navigate(prevLocationRef.current); 
+  };
+
   return (
     <div className={styles.container}>
-      <button onClick={() => navigate(-1)} className={styles.goBackButton}>Go back</button>
+      <button onClick={handleGoBack} className={styles.goBackButton}>Go back</button>
       <div className={styles.movieInfo}>
         <img
           src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`}
@@ -36,8 +41,8 @@ const MovieDetailsPage = () => {
       </div>
 
       <div className={styles.links}>
-        <Link to="cast">Cast</Link>
-        <Link to="reviews">Reviews</Link>
+        <Link to="cast" state={{ from: location }}>Cast</Link>
+        <Link to="reviews" state={{ from: location }}>Reviews</Link>
       </div>
 
       <Routes>
